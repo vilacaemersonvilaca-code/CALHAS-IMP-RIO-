@@ -1,0 +1,18 @@
+{
+  "name": "Calhas Império",
+  "short_name": "Calhas Império",
+  "description": "Orçamentos, recibos e ordens de serviço da Calhas Império.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#111111",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
