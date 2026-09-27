@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Calhas Império - Orçamentos e Recibos</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#fff;color:#111}
+header{background:#111;color:#fff;padding:18px;text-align:center}header h1{margin:0;font-size:24px}header p{margin:5px 0 0;color:#f2c400}
+main{max-width:760px;margin:18px auto;padding:0 12px}.card{background:#fff;border-radius:14px;padding:18px;margin-bottom:15px;box-shadow:0 2px 10px #0001}
+label{display:block;font-weight:bold;margin:10px 0 5px}input,textarea,select{width:100%;padding:11px;border:1px solid #ccc;border-radius:8px;font-size:16px}
+textarea{min-height:80px;resize:vertical}.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+button{border:0;border-radius:9px;padding:13px 16px;font-size:16px;font-weight:bold;cursor:pointer;margin:5px 4px 0 0}
+.primary{background:#f2c400;color:#111}.dark{background:#111;color:#fff}.muted{background:#ddd}
+#preview{background:#fff!important;color:#111;padding:35px;margin-top:15px;min-height:500px}
+.dochead{display:flex;justify-content:space-between;border-bottom:3px solid #111;padding-bottom:12px}
+.dochead h2{margin:0}.gold{color:#b38a00}.line{border-bottom:1px solid #ddd;padding:10px 0}.total{font-size:20px;font-weight:bold;text-align:right;margin-top:20px}
+.small{font-size:12px;color:#666}
+@media(max-width:600px){.row{grid-template-columns:1fr}}
+@page{size:A4;margin:0}
+@media print{
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+  html,body{width:210mm!important;min-height:297mm!important;margin:0!important;padding:0!important;background:#fff!important;color:#111!important}
+  header,.no-print{display:none!important}
+  main{display:block!important;width:210mm!important;max-width:none!important;margin:0!important;padding:0!important;background:#fff!important}
+  .print-card{display:block!important;width:210mm!important;min-height:297mm!important;margin:0!important;padding:0!important;background:#fff!important;box-shadow:none!important;border-radius:0!important}
+  #preview{display:block!important;width:210mm!important;min-height:297mm!important;margin:0!important;padding:20mm!important;background:#fff!important;color:#111!important}
+  .print-only{display:block!important}
+}
+</style>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#111111">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Calhas Império">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => navigator.serviceWorker.register("sw.js"));
+}
+</script>
+</head>
+<body>
+<header><h1>👑 CALHAS IMPÉRIO</h1><p>Calhas & Rufos</p></header>
+<main>
+<div class="card no-print">
+<h2>Novo documento</h2>
+<label>Tipo</label>
+<select id="tipo"><option>Orçamento</option><option>Recibo</option><option>Ordem de Serviço</option></select>
+<div class="row">
+<div><label>Cliente</label><input id="cliente" placeholder="Nome do cliente"></div>
+<div><label>Data</label><input id="data" type="date"></div>
+</div>
+<label>Serviço / descrição</label><textarea id="servico" placeholder="Ex.: 34 metros de calha galvalume 0,43 com instalação"></textarea>
+<div class="row">
+<div><label>Valor do material (R$)</label><input id="material" type="number" step="0.01" value="0"></div>
+<div><label>Mão de obra (R$)</label><input id="mao" type="number" step="0.01" value="0"></div>
+</div>
+<div class="row">
+<div><label>Desconto (R$)</label><input id="desconto" type="number" step="0.01" value="0"></div>
+<div><label>Pagamento</label><select id="pagamento"><option>Pix</option><option>Dinheiro</option><option>Cartão de crédito</option><option>Cartão de débito</option><option>A combinar</option></select></div>
+</div>
+<label>Observações</label><textarea id="obs" placeholder="Ex.: valores das telhas já incluem mão de obra"></textarea>
+<button class="primary" onclick="gerar()">Gerar documento</button>
+<button class="dark" onclick="window.print()">🖨️ Salvar / imprimir em PDF</button>
+<button class="muted" onclick="limpar()">Limpar</button>
+</div>
+
+<div class="card print-card">
+<div id="preview">
+<div class="dochead"><div><h2 id="ptipo">ORÇAMENTO</h2><div class="gold"><b>CALHAS IMPÉRIO</b> — Calhas & Rufos</div></div><div id="pdata"></div></div>
+<div class="line"><b>Cliente:</b> <span id="pcliente"></span></div>
+<div class="line"><b>Serviço:</b><br><span id="pservico"></span></div>
+<div class="line"><b>Pagamento:</b> <span id="ppagamento"></span></div>
+<div class="line"><b>Observações:</b><br><span id="pobs"></span></div>
+<div class="line"><b>Material:</b> R$ <span id="pmaterial">0,00</span></div>
+<div class="line"><b>Mão de obra:</b> R$ <span id="pmao">0,00</span></div>
+<div class="line"><b>Desconto:</b> R$ <span id="pdesconto">0,00</span></div>
+<div class="total">TOTAL: R$ <span id="ptotal">0,00</span></div>
+<p style="margin-top:50px">__________________________________<br>Calhas Império</p>
+<p class="small">Documento gerado pelo aplicativo Calhas Império.</p>
+</div>
+</div>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+function br(v){return Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}
+function gerar(){
+ let m=+$('material').value||0, mao=+$('mao').value||0, d=+$('desconto').value||0;
+ let total=m+mao-d;
+ $('ptipo').textContent=$('tipo').value.toUpperCase();
+ $('pdata').textContent=$('data').value?new Date($('data').value+'T12:00:00').toLocaleDateString('pt-BR'):'';
+ $('pcliente').textContent=$('cliente').value;
+ $('pservico').textContent=$('servico').value;
+ $('ppagamento').textContent=$('pagamento').value;
+ $('pobs').textContent=$('obs').value;
+ $('pmaterial').textContent=br(m); $('pmao').textContent=br(mao); $('pdesconto').textContent=br(d); $('ptotal').textContent=br(total);
+}
+function limpar(){
+ document.querySelectorAll('input,textarea').forEach(x=>{if(x.id==='material'||x.id==='mao'||x.id==='desconto')x.value='0';else x.value=''});
+ $('data').value=new Date().toISOString().slice(0,10); gerar();
+}
+$('data').value=new Date().toISOString().slice(0,10); gerar();
+</script>
+</body>
+</html>
